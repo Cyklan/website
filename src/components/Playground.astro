@@ -1,0 +1,212 @@
+---
+
+---
+
+<div class="playground-container">
+  <canvas id="playground-canvas"></canvas>
+  <button id="shake-btn" type="button">[ shake ]</button>
+</div>
+
+<script>
+  import Matter from "matter-js";
+
+  const { Engine, Render, Runner, Bodies, Body, Composite, Constraint, Mouse, MouseConstraint } = Matter;
+
+  const canvas = document.getElementById("playground-canvas") as HTMLCanvasElement;
+  const container = canvas.parentElement as HTMLElement;
+
+  const width = container.clientWidth;
+  const height = container.clientHeight;
+
+  canvas.width = width;
+  canvas.height = height;
+
+  // Create engine
+  const engine = Engine.create();
+  engine.gravity.y = 1;
+
+  // Create renderer
+  const render = Render.create({
+    canvas: canvas,
+    engine: engine,
+    options: {
+      width: width,
+      height: height,
+      wireframes: false,
+      background: "transparent",
+      pixelRatio: window.devicePixelRatio || 1,
+    },
+  });
+
+  // Double pendulum parameters
+  const anchorX = width / 2;
+  const anchorY = height * 0.4; // Anchor in upper-middle area
+  const armLength1 = Math.min(width, height) * 0.22;
+  const armLength2 = Math.min(width, height) * 0.18;
+  const bobRadius = 10;
+  const borderColor = "#c9c2b8";
+
+  // Start with both arms pointing UP for maximum potential energy
+  // angle = 0 means straight down, so we use small angles for "almost up"
+  const angle1 = 3.24; // Nearly pointing up (PI ≈ 3.14), slight tilt right
+  const angle2 = 3.24; // Second arm also nearly up, tilted other way
+
+  // Calculate initial positions (Y increases downward in canvas)
+  // cos(PI) = -1, so anchorY + cos(angle)*length goes UP when angle ≈ PI
+  const bob1X = anchorX + Math.sin(angle1) * armLength1;
+  const bob1Y = anchorY + Math.cos(angle1) * armLength1;
+  const bob2X = bob1X + Math.sin(angle2) * armLength2;
+  const bob2Y = bob1Y + Math.cos(angle2) * armLength2;
+
+  // Create pendulum bobs - heavier for more momentum
+  const bob1 = Bodies.circle(bob1X, bob1Y, bobRadius, {
+    density: 0.008,
+    frictionAir: 0,
+    friction: 0,
+    restitution: 0,
+    render: {
+      fillStyle: "#3d3d3d",
+      strokeStyle: borderColor,
+      lineWidth: 1,
+    },
+  });
+
+  const bob2 = Bodies.circle(bob2X, bob2Y, bobRadius * 0.85, {
+    density: 0.008,
+    frictionAir: 0,
+    friction: 0,
+    restitution: 0,
+    render: {
+      fillStyle: "#3d3d3d",
+      strokeStyle: borderColor,
+      lineWidth: 1,
+    },
+  });
+
+  // Create constraints (the "arms" of the pendulum)
+  const arm1 = Constraint.create({
+    pointA: { x: anchorX, y: anchorY },
+    bodyB: bob1,
+    length: armLength1,
+    stiffness: 1,
+    render: {
+      strokeStyle: borderColor,
+      lineWidth: 1,
+      type: "line",
+    },
+  });
+
+  const arm2 = Constraint.create({
+    bodyA: bob1,
+    bodyB: bob2,
+    length: armLength2,
+    stiffness: 1,
+    render: {
+      strokeStyle: borderColor,
+      lineWidth: 1,
+      type: "line",
+    },
+  });
+
+  // Add mouse control
+  const mouse = Mouse.create(canvas);
+  const mouseConstraint = MouseConstraint.create(engine, {
+    mouse: mouse,
+    constraint: {
+      stiffness: 0.2,
+      render: {
+        visible: false,
+      },
+    },
+  });
+
+  // Fix mouse position for high DPI displays
+  mouse.pixelRatio = window.devicePixelRatio || 1;
+
+  // Add all bodies and constraints to the world
+  Composite.add(engine.world, [bob1, bob2, arm1, arm2, mouseConstraint]);
+
+  // No initial velocity needed - the angled start creates chaotic motion
+
+  // Run the engine and renderer
+  const runner = Runner.create();
+  Runner.run(runner, engine);
+  Render.run(render);
+
+  // Handle resize
+  const handleResize = () => {
+    const newWidth = container.clientWidth;
+    const newHeight = container.clientHeight;
+
+    canvas.width = newWidth;
+    canvas.height = newHeight;
+
+    render.canvas.width = newWidth;
+    render.canvas.height = newHeight;
+    render.options.width = newWidth;
+    render.options.height = newHeight;
+
+    // Update anchor position
+    const newAnchorX = newWidth / 2;
+    const newAnchorY = newHeight * 0.15;
+    arm1.pointA = { x: newAnchorX, y: newAnchorY };
+  };
+
+  window.addEventListener("resize", handleResize);
+
+  // Shake button - apply random force to bobs
+  const shakeBtn = document.getElementById("shake-btn") as HTMLButtonElement;
+  shakeBtn.addEventListener("click", () => {
+    const forceMagnitude = 0.3;
+
+    // Random force for bob1
+    Body.applyForce(bob1, bob1.position, {
+      x: (Math.random() - 0.5) * forceMagnitude,
+      y: (Math.random() - 0.5) * forceMagnitude,
+    });
+
+    // Random force for bob2
+    Body.applyForce(bob2, bob2.position, {
+      x: (Math.random() - 0.5) * forceMagnitude,
+      y: (Math.random() - 0.5) * forceMagnitude,
+    });
+  });
+</script>
+
+<style>
+  .playground-container {
+    width: 100%;
+    height: 100%;
+    min-height: 300px;
+    position: relative;
+  }
+
+  #playground-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  #shake-btn {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    background: transparent;
+    border: 1px solid #c9c2b8;
+    color: #888;
+    font-family: inherit;
+    font-size: 0.85rem;
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  #shake-btn:hover {
+    border-color: #3d3d3d;
+    color: #3d3d3d;
+  }
+
+  #shake-btn:active {
+    transform: scale(0.95);
+  }
+</style>
