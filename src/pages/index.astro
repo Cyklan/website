@@ -105,7 +105,7 @@ import Playground from "../components/Playground.astro";
               </div>
             </div>
             <div class="version-info">
-              <span>[ v1.0.3 ]</span>
+              <span>[ v1.0.4 ]</span>
               <span>{new Date().getFullYear()}</span>
             </div>
           </div>
@@ -123,13 +123,14 @@ import Playground from "../components/Playground.astro";
     --text-muted: #888;
   }
 
+  html,
   body {
     background-color: var(--bg-color);
     margin: 0;
-    height: 100vh;
-    width: 100vw;
+    min-height: 100vh;
     color: var(--text-color);
     box-sizing: border-box;
+    overflow-x: hidden;
   }
 
   main {
@@ -141,6 +142,13 @@ import Playground from "../components/Playground.astro";
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  @media (max-width: 768px) {
+    main {
+      padding: 1rem;
+      align-items: flex-start;
+    }
   }
 </style>
 
@@ -176,7 +184,10 @@ import Playground from "../components/Playground.astro";
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    min-height: 200px;
+
+    @media (min-width: 768px) {
+      min-height: 200px;
+    }
   }
 
   .intro h1 {
@@ -292,7 +303,12 @@ import Playground from "../components/Playground.astro";
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-direction: column;
     height: 100%;
+
+    @media (min-width: 900px) {
+      flex-direction: row;
+    }
   }
 
   .social-links {
@@ -368,6 +384,28 @@ import Playground from "../components/Playground.astro";
 
     .version-info {
       align-items: flex-start;
+    }
+
+    .experience-list li {
+      flex-wrap: wrap;
+    }
+
+    .experience-list .role,
+    .experience-list .company {
+      white-space: normal;
+    }
+
+    .experience-list .dots {
+      display: none;
+    }
+
+    .experience-list .company {
+      width: 100%;
+      margin-left: 1rem;
+    }
+
+    .cell {
+      padding: 1rem;
     }
   }
 </style>

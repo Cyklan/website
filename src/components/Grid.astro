@@ -13,18 +13,18 @@ const { class: className } = Astro.props;
 <style>
   .grid {
     display: grid;
-    grid-template-columns: 1fr 1.5fr;
-    grid-template-rows: auto auto auto;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
     width: 100%;
     min-height: 0;
+    height: auto;
     gap: 1.5rem;
   }
 
-  @media (max-width: 768px) {
+  @media (min-width: 768px) {
     .grid {
-      grid-template-columns: 1fr;
-      grid-template-rows: auto auto auto auto;
-      height: auto;
+      grid-template-columns: 1fr 1.5fr;
+      grid-template-rows: auto auto auto;
     }
   }
 </style>
